@@ -1,0 +1,13 @@
+{
+  "name": "affiliate-payout-system",
+  "version": "1.0.0",
+  "description": "Affiliate Payout Management System",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+     "start": "node app.js"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC"
+}
