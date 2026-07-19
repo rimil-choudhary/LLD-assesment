@@ -1,24 +1,31 @@
-# Affiliate Payout Management System
+# JavaScript LLD
 
-## Overview
+A collection of **Low-Level Design (LLD)** projects built using **JavaScript**.
 
-This project is a Low-Level Design (LLD) implementation of an Affiliate Payout Management System.
+This repository contains real-world LLD implementations using clean architecture and design patterns. Each project is designed to improve system design and object-oriented programming skills.
 
-The system manages affiliate sales, advance payouts, final reconciliation, withdrawals, and payout recovery while following clean architecture principles.
+---
+
+# Project
+
+## JavascriptLLD 
+
+This project is a Low-Level Design implementation of an **JavascriptLLD**.
+
+It manages affiliate sales, advance payouts, final settlements, withdrawals, and failed payment recovery using a clean and scalable architecture.
 
 ---
 
 # Features
 
-- Advance payout (10% of pending sales)
-- Idempotent advance payout processing
-- Sale reconciliation
-- Approved sale settlement
-- Rejected sale adjustment
+- 10% advance payout for pending sales
+- Process advance payout only once
+- Approve or reject sales
+- Final payout calculation
 - Wallet management
-- Withdrawal restriction (one withdrawal every 24 hours)
+- One withdrawal allowed every 24 hours
 - Failed payout recovery
-- Wallet ledger (audit trail)
+- Wallet transaction history
 - Repository Pattern
 - Service Layer Architecture
 - Dependency Injection
@@ -26,57 +33,19 @@ The system manages affiliate sales, advance payouts, final reconciliation, withd
 
 ---
 
-# Project Structure
-
-```
-affiliate-payout-system/
-│
-├── config/
-│   └── constants.js
-│
-├── controllers/
-│   ├── SaleController.js
-│   ├── WithdrawalController.js
-│   └── PayoutController.js
-│
-├── database/
-│   └── InMemoryDatabase.js
-│
-├── models/
-│   ├── User.js
-│   ├── Wallet.js
-│   ├── Sale.js
-│   ├── Payout.js
-│   └── WalletLedger.js
-│
-├── repositories/
-│   ├── Userrepo.js
-│   ├── WalletRepository.js
-│   ├── SaleRepository.js
-│   ├── PayoutRepository.js
-│   └── WalletLedgerRepository.js
-│
-├── services/
-│   ├── WalletService.js
-│   ├── AdvancePayoutService.js
-│   ├── ReconciliationService.js
-│   ├── WithdrawalService.js
-│   └── RecoveryService.js
-│
-├── app.js
-│
-└── package.json
-```
-
----
-
 # Business Rules
 
 ## Advance Payout
 
-Every pending sale receives 10% advance payout.
+- Every pending sale receives a **10% advance payout**.
+- Advance payout is processed only once.
 
-Advance payout is processed only once.
+**Example**
+
+```text
+Sale Earning = ₹40
+Advance Payout = ₹4
+```
 
 ---
 
@@ -84,137 +53,96 @@ Advance payout is processed only once.
 
 ### Approved Sale
 
-Final Payout =
+The remaining amount is paid after deducting the advance.
 
-Earning − Advance Paid
-
-Example
-
+```text
+Earning = ₹40
+Advance Paid = ₹4
+Final Payout = ₹36
 ```
-Earning = 40
-
-Advance = 4
-
-Final = 36
-```
-
----
 
 ### Rejected Sale
 
-Advance already paid should be adjusted.
+If the sale is rejected, the advance amount is deducted.
 
-```
-Advance = 4
-
-Adjustment = -4
+```text
+Advance Paid = ₹4
+Wallet Adjustment = -₹4
 ```
 
 ---
 
 ## Withdrawal
 
-A user can withdraw only once every 24 hours.
+- Users can withdraw money only once every **24 hours**.
 
-Money moves from
+Money Flow
 
+```text
 Withdrawable Balance
-
-↓
-
+        ↓
 Locked Balance
-
-↓
-
+        ↓
 Payment Gateway
+```
 
 ---
 
-## Failed Recovery
+## Failed Payment Recovery
 
-If gateway returns
+If the payment fails, the money is returned to the wallet.
 
-- Failed
-- Cancelled
-- Rejected
-
-Money is moved back
-
-Locked
-
-↓
-
-Withdrawable
+```text
+Locked Balance
+      ↓
+Withdrawable Balance
+```
 
 ---
 
 # APIs
 
-## Create Sale
-
-POST /sales
-
----
-
-## Process Advance
-
-POST /advance-payout/process
-
----
-
-## Reconcile Sale
-
-PATCH /sales/{saleId}/reconcile
-
----
-
-## Withdraw
-
-POST /withdraw
-
----
-
-## Recover Failed Payout
-
-POST /payouts/{payoutId}/recover
+| Method | Endpoint | Description |
+|---------|----------|-------------|
+| POST | `/sales` | Create Sale |
+| POST | `/advance-payout/process` | Process Advance Payout |
+| PATCH | `/sales/{saleId}/reconcile` | Approve or Reject Sale |
+| POST | `/withdraw` | Withdraw Money |
+| POST | `/payouts/{payoutId}/recover` | Recover Failed Payout |
 
 ---
 
 # Design Patterns Used
 
-Repository Pattern
+### Repository Pattern
 
-- UserRepository
-- WalletRepository
-- SaleRepository
+- userrepo
+- collectionrepo
+- salerepo
 
-Service Layer
+### Service Layer
 
-- Business logic
+Contains all business logic.
 
-Singleton
+### Singleton
 
-- InMemoryDatabase
+Used for the In-Memory Database.
 
-Dependency Injection
+### Dependency Injection
 
-- Services depend on repositories
+Services receive repositories through dependency injection.
 
-Layered Architecture
+### Layered Architecture
 
+```text
 Controller
-
-↓
-
+     ↓
 Service
-
-↓
-
+     ↓
 Repository
-
-↓
-
-Database
+     ↓
+In-Memory Database
+```
 
 ---
 
@@ -222,23 +150,24 @@ Database
 
 ## In-Memory Database
 
-Pros
+### Advantages
 
 - Easy to understand
 - No setup required
+- Good for learning
 
-Cons
+### Limitations
 
-- No persistence
-- Data lost after restart
+- Data is lost after restart
+- Not suitable for production
 
 ---
 
-## No Payment Gateway
+## Payment Gateway
 
-For simplicity, gateway responses are simulated.
+A mock payment gateway is used for demonstration.
 
-Production systems should integrate
+Production systems can integrate:
 
 - Razorpay
 - Cashfree
@@ -246,342 +175,148 @@ Production systems should integrate
 
 ---
 
-## Transactions
+## Database Transactions
 
-Current implementation does not support database transactions.
+Transactions are not implemented.
 
-Production systems should wrap
+In production, the following operations should be executed inside a single transaction:
 
-- Wallet update
-- Payout creation
-- Sale update
-
-inside a single transaction.
+- Wallet Update
+- Payout Creation
+- Sale Update
 
 ---
 
 ## Wallet Ledger
 
-Every wallet balance change should create a ledger entry.
+Every wallet transaction should create a ledger entry.
 
-This enables
+Benefits:
 
 - Auditing
-- Reconciliation
 - Debugging
+- Transaction Tracking
 
 ---
 
 # Future Improvements
 
 - JWT Authentication
-- Scheduler (Cron Job)
-- Kafka / RabbitMQ Events
-- Redis Cache
-- UUID Generator
-- Optimistic Locking
+- Express REST APIs
 - Database Transactions
-- REST API using Express
-- Unit Tests
+- Redis Cache
+- Kafka / RabbitMQ
+- Cron Jobs
 - Docker Support
+- UUID Generator
+- Unit Testing
 
 ---
 
 # How to Run
 
-```
+```bash
 npm install
-
 npm start
 ```
 
 or
 
-```
+```bash
 node app.js
 ```
 
 ---
 
-# Sample Flow
+# Project Flow
 
+```text
 Create User
-
-↓
-
+      ↓
 Create Wallet
-
-↓
-
-Create Pending Sales
-
-↓
-
-Advance Payout
-
-↓
-
-Admin Reconciliation
-
-↓
-
-Withdrawal
-
-↓
-
+      ↓
+Create Sales
+      ↓
+Process Advance Payout
+      ↓
+Approve / Reject Sale
+      ↓
+Withdraw Money
+      ↓
 Gateway Failure
-
-↓
-
-Recovery
-
-                    +----------------------+
-                    |      Controller      |
-                    +----------------------+
-                              |
-                              ▼
-                    +----------------------+
-                    |       Service        |
-                    +----------------------+
-                              |
-                              ▼
-                    +----------------------+
-                    |     Repository       |
-                    +----------------------+
-                              |
-                              ▼
-                    +----------------------+
-                    |  InMemory Database   |
-                    +----------------------+
-                              |
-                              ▼
-                    +----------------------+
-                    |        Models        |
-                    +----------------------+
-
-
-
-
+      ↓
+Recover Failed Payment
+```
 
 ---
 
-# 2. ER Diagram
-
-A simple text-based ER diagram is sufficient for an LLD submission.
+# System Architecture
 
 ```text
-                         +------------------+
-                         |      USER        |
-                         +------------------+
-                         | userId (PK)      |
-                         | name             |
-                         | email            |
-                         +------------------+
-                                  |
-                                  | 1
-                                  |
-                                  | 1
-                                  ▼
-                         +------------------+
-                         |     WALLET       |
-                         +------------------+
-                         | userId (PK/FK)   |
-                         | withdrawable     |
-                         | lockedBalance    |
-                         | lastWithdrawalAt |
-                         +------------------+
-                                  |
-                                  | 1
-                                  |
-                                  | N
-                                  ▼
-                     +------------------------+
-                     |    WALLET_LEDGER       |
-                     +------------------------+
-                     | ledgerId (PK)          |
-                     | userId (FK)            |
-                     | saleId (FK)            |
-                     | payoutId (FK)          |
-                     | type                   |
-                     | amount                 |
-                     | createdAt              |
-                     +------------------------+
++-------------+
+| Controller  |
++-------------+
+       |
+       ↓
++-------------+
+|  Service    |
++-------------+
+       |
+       ↓
++-------------+
+| Repository  |
++-------------+
+       |
+       ↓
++-------------------+
+| In-Memory Database|
++-------------------+
+       |
+       ↓
++-------------+
+|   Models    |
++-------------+
+```
 
-+------------------+
-|      SALE        |
-+------------------+
-| saleId (PK)      |
-| userId (FK)      |
-| brand            |
-| earning          |
-| status           |
-| advancePaid      |
-| advanceAmount    |
-+------------------+
-          |
-          | 1
-          |
-          | N
-          ▼
-+----------------------+
-|       PAYOUT         |
-+----------------------+
-| payoutId (PK)        |
-| userId (FK)          |
-| saleId (FK)          |
-| amount               |
-| type                 |
-| status               |
-| createdAt            |
-+----------------------+
+---
 
-OUTPUT
+# ER Diagram
 
-=====================================
- Affiliate Payout Management System
-=====================================
+```text
+user
+ │
+ ├── collection
+ │      └── collectionledger
+ │
+ ├── sale
+ │      └── pay
+```
 
-STEP 1 : Create User
-User {
-  id: 1,
-  name: 'John Doe',
-  email: 'john@gmail.com',
-  createdAt: 2026-07-19T08:55:41.951Z,
-  updatedAt: 2026-07-19T08:55:41.951Z
-}
-Wallet {
-  userId: 1,
-  withdrawableBalance: 0,
-  lockedBalance: 0,
-  lastWithdrawalAt: null,
-  createdAt: 2026-07-19T08:55:41.951Z,
-  updatedAt: 2026-07-19T08:55:41.951Z
-}
+---
 
--------------------------------------
-STEP 2 : Create Sales
-┌─────────┬────┬────────┬───────────┬─────────┬───────────┬─────────────┬───────────────────┬──────────────────────────┬──────────────────────────┐
-│ (index) │ id │ userId │ brandId   │ earning │ status    │ advancePaid │ advancePaidAmount │ createdAt                │ updatedAt                │
-├─────────┼────┼────────┼───────────┼─────────┼───────────┼─────────────┼───────────────────┼──────────────────────────┼──────────────────────────┤
-│ 0       │ 1  │ 1      │ 'brand_1' │ 40      │ 'PENDING' │ false       │ 0                 │ 2026-07-19T08:55:41.953Z │ 2026-07-19T08:55:41.953Z │
-│ 1       │ 2  │ 1      │ 'brand_1' │ 40      │ 'PENDING' │ false       │ 0                 │ 2026-07-19T08:55:41.953Z │ 2026-07-19T08:55:41.953Z │
-│ 2       │ 3  │ 1      │ 'brand_1' │ 40      │ 'PENDING' │ false       │ 0                 │ 2026-07-19T08:55:41.953Z │ 2026-07-19T08:55:41.953Z │
-└─────────┴────┴────────┴───────────┴─────────┴───────────┴─────────────┴───────────────────┴──────────────────────────┴──────────────────────────┘
+# Demo Flow
 
--------------------------------------
-STEP 3 : Run Advance Payout
-Wallet After Advance
-Wallet {
-  userId: 1,
-  withdrawableBalance: 12,
-  lockedBalance: 0,
-  lastWithdrawalAt: null,
-  createdAt: 2026-07-19T08:55:41.951Z,
-  updatedAt: 2026-07-19T08:55:41.951Z
-}
+1. Create User
+2. Create Wallet
+3. Create Sales
+4. Process Advance Payout
+5. Approve or Reject Sales
+6. Withdraw Money
+7. Simulate Gateway Failure
+8. Recover Failed Payment
+9. View Updated Wallet and Payout Details
 
-Payouts
-┌─────────┬───────────────┬────────┬────────┬────────┬───────────┬───────────┬───────────────┬──────────────────────────┬──────────────────────────┐
-│ (index) │ id            │ userId │ saleId │ amount │ type      │ status    │ failureReason │ createdAt                │ updatedAt                │
-├─────────┼───────────────┼────────┼────────┼────────┼───────────┼───────────┼───────────────┼──────────────────────────┼──────────────────────────┤
-│ 0       │ 1784451341956 │ 1      │ 1      │ 4      │ 'ADVANCE' │ 'SUCCESS' │ null          │ 2026-07-19T08:55:41.957Z │ 2026-07-19T08:55:41.957Z │
-│ 1       │ 1784451341957 │ 1      │ 3      │ 4      │ 'ADVANCE' │ 'SUCCESS' │ null          │ 2026-07-19T08:55:41.957Z │ 2026-07-19T08:55:41.957Z │
-└─────────┴───────────────┴────────┴────────┴────────┴───────────┴───────────┴───────────────┴──────────────────────────┴──────────────────────────┘
+---
 
--------------------------------------
-STEP 4 : Admin Reconciliation
-Wallet After Reconciliation
-Wallet {
-  userId: 1,
-  withdrawableBalance: 80,
-  lockedBalance: 0,
-  lastWithdrawalAt: null,
-  createdAt: 2026-07-19T08:55:41.951Z,
-  updatedAt: 2026-07-19T08:55:41.951Z
-}
+# Technologies Used
 
-Sales
-┌─────────┬────┬────────┬───────────┬─────────┬────────────┬─────────────┬───────────────────┬──────────────────────────┬──────────────────────────┐
-│ (index) │ id │ userId │ brandId   │ earning │ status     │ advancePaid │ advancePaidAmount │ createdAt                │ updatedAt                │
-├─────────┼────┼────────┼───────────┼─────────┼────────────┼─────────────┼───────────────────┼──────────────────────────┼──────────────────────────┤
-│ 0       │ 1  │ 1      │ 'brand_1' │ 40      │ 'REJECTED' │ true        │ 4                 │ 2026-07-19T08:55:41.953Z │ 2026-07-19T08:55:41.960Z │
-│ 1       │ 2  │ 1      │ 'brand_1' │ 40      │ 'APPROVED' │ true        │ 4                 │ 2026-07-19T08:55:41.953Z │ 2026-07-19T08:55:41.960Z │
-│ 2       │ 3  │ 1      │ 'brand_1' │ 40      │ 'APPROVED' │ true        │ 4                 │ 2026-07-19T08:55:41.953Z │ 2026-07-19T08:55:41.960Z │
-└─────────┴────┴────────┴───────────┴─────────┴────────────┴─────────────┴───────────────────┴──────────────────────────┴──────────────────────────┘
+- JavaScript (ES6+)
+- Node.js
+- Object-Oriented Programming (OOP)
+- Repository Pattern
+- Service Layer Architecture
+- Dependency Injection
+- In-Memory Database
 
-Payouts
-┌─────────┬───────────────┬────────┬────────┬────────┬───────────┬───────────┬───────────────┬──────────────────────────┬──────────────────────────┐
-│ (index) │ id            │ userId │ saleId │ amount │ type      │ status    │ failureReason │ createdAt                │ updatedAt                │
-├─────────┼───────────────┼────────┼────────┼────────┼───────────┼───────────┼───────────────┼──────────────────────────┼──────────────────────────┤
-│ 0       │ 1784451341956 │ 1      │ 1      │ 4      │ 'ADVANCE' │ 'SUCCESS' │ null          │ 2026-07-19T08:55:41.957Z │ 2026-07-19T08:55:41.957Z │
-│ 1       │ 1784451341957 │ 1      │ 3      │ 4      │ 'ADVANCE' │ 'SUCCESS' │ null          │ 2026-07-19T08:55:41.957Z │ 2026-07-19T08:55:41.957Z │
-│ 2       │ 1784451341960 │ 1      │ 3      │ 36     │ 'FINAL'   │ 'SUCCESS' │ null          │ 2026-07-19T08:55:41.960Z │ 2026-07-19T08:55:41.960Z │
-└─────────┴───────────────┴────────┴────────┴────────┴───────────┴───────────┴───────────────┴──────────────────────────┴──────────────────────────┘
+---
 
--------------------------------------
-STEP 5 : Withdraw ₹50
-Payout {
-  id: 1784451341964,
-  userId: 1,
-  saleId: null,
-  amount: 50,
-  type: 'WITHDRAWAL',
-  status: 'PENDING',
-  failureReason: null,
-  createdAt: 2026-07-19T08:55:41.964Z,
-  updatedAt: 2026-07-19T08:55:41.964Z
-}
-
-Wallet
-Wallet {
-  userId: 1,
-  withdrawableBalance: 30,
-  lockedBalance: 50,
-  lastWithdrawalAt: 2026-07-19T08:55:41.964Z,
-  createdAt: 2026-07-19T08:55:41.951Z,
-  updatedAt: 2026-07-19T08:55:41.951Z
-}
-
--------------------------------------
-STEP 6 : Simulate Gateway Failure
-Payout {
-  id: 1784451341964,
-  userId: 1,
-  saleId: null,
-  amount: 50,
-  type: 'WITHDRAWAL',
-  status: 'FAILED',
-  failureReason: null,
-  createdAt: 2026-07-19T08:55:41.964Z,
-  updatedAt: 2026-07-19T08:55:41.965Z
-}
-
--------------------------------------
-STEP 7 : Recover Failed Payout
-
-Wallet
-Wallet {
-  userId: 1,
-  withdrawableBalance: 80,
-  lockedBalance: 0,
-  lastWithdrawalAt: 2026-07-19T08:55:41.964Z,
-  createdAt: 2026-07-19T08:55:41.951Z,
-  updatedAt: 2026-07-19T08:55:41.951Z
-}
-
-Payout
-Payout {
-  id: 1784451341964,
-  userId: 1,
-  saleId: null,
-  amount: 50,
-  type: 'WITHDRAWAL',
-  status: undefined,
-  failureReason: null,
-  createdAt: 2026-07-19T08:55:41.964Z,
-  updatedAt: 2026-07-19T08:55:41.966Z
-}
-
-=====================================
- Demo Completed
-=====================================
